@@ -1,57 +1,38 @@
-import { deadlineKind, daysLeft } from './model.js';
+import { deadlineKind } from './model.js';
 import { zipFiles } from './excel.js';
 export function executiveReport(processes, now = new Date(), scope = 'Todos os processos') {
   const active = processes.filter(p => p.status !== 'Concluído');
   const completed = processes.length - active.length;
   const late = active.filter(p => deadlineKind(p, now) === 'overdue');
   const soon = active.filter(p => deadlineKind(p, now) === 'soon');
-  const priorities = [...late, ...soon].sort((a,b) => a.deadline.localeCompare(b.deadline));
-  const group = key => [...new Set(processes.map(p => p[key]))].map(name => {
-    const items = processes.filter(p => p[key] === name);
-    return {name,total:items.length,active:items.filter(p => p.status !== 'Concluído').length,late:items.filter(p => deadlineKind(p,now) === 'overdue').length};
-  }).sort((a,b) => b.late-a.late || b.active-a.active || a.name.localeCompare(b.name,'pt-BR'));
-  const lines = [
-    ['title','Relatório Executivo'],['subtitle','Monitoramento de Processos Administrativos'],
-    ['text',`Emitido em ${new Intl.DateTimeFormat('pt-BR',{dateStyle:'long',timeStyle:'short'}).format(now)}. Base: ${scope}. Dados demonstrativos e cadastros deste navegador.`],
-    ['heading','1. Síntese gerencial'],
-    ['text',`A carteira analisada reúne ${processes.length} processo(s): ${active.length} ativo(s) e ${completed} concluído(s). Entre os ativos, ${late.length} estão atrasados e ${soon.length} vencem em até sete dias, incluindo hoje. Os grupos de atraso e vencimento são subconjuntos dos ativos e não devem ser somados ao total da carteira.`],
-    ['heading','2. Pontos de atenção'],
-    ['text',late.length ? `Prioridade de gestão: regularizar os ${late.length} processo(s) vencido(s), validando pendências, responsáveis e datas de encaminhamento.` : 'Não há processos atrasados nesta seleção.'],
-    ['text',soon.length ? `Ação preventiva: acompanhar os ${soon.length} processo(s) com vencimento nos próximos sete dias.` : 'Não há processos próximos do vencimento nesta seleção.'],
-    ['heading','3. Distribuição por unidade atual'],
-    ...group('unit').map(g => ['text',`${g.name}: ${g.total} no total; ${g.active} ativo(s); ${g.late} atrasado(s).`]),
-    ['heading','4. Distribuição por responsável'],
-    ...group('owner').map(g => ['text',`${g.name}: ${g.total} no total; ${g.active} ativo(s); ${g.late} atrasado(s).`]),
-    ['heading','5. Encaminhamentos prioritários'],
-    ['text','Ordem: prazo mais antigo primeiro. As pendências abaixo são informações cadastradas e não comprovam, por si só, a causa do atraso. Os prazos indicados são os prazos atuais dos processos; não há nova data de compromisso registrada.'],
-    ...priorities.flatMap(p => [
-      ['subheading',`${p.sei} — ${p.subject}`],
-      ['text',`Situação de prazo: ${daysLeft(p.deadline,now)<0 ? `${Math.abs(daysLeft(p.deadline,now))} dia(s) de atraso` : `vence em ${daysLeft(p.deadline,now)} dia(s)`}. Prazo: ${p.deadline.split('-').reverse().join('/')}. Unidade: ${p.unit}. Responsável: ${p.owner}.`],
-      ['text',`Pendências informadas: ${p.pending || 'Não informadas.'}`],
-      ['text',`Próximo encaminhamento: ${p.next || 'A definir pela unidade responsável.'}`]
-    ]),
-    ...(!priorities.length ? [['text','Nenhum encaminhamento urgente identificado pelos prazos desta seleção.']] : []),
-    ['heading','6. Detalhamento da carteira'],
-    ...processes.flatMap(p => [
-      ['subheading',`${p.sei} — ${p.subject}`],['text',`${p.status}. Solicitante: ${p.requester}. Unidade atual: ${p.unit}. Responsável: ${p.owner}. Prazo: ${p.deadline.split('-').reverse().join('/')}.`],
-      ['text',`Resumo: ${p.summary || 'Não informado.'}`],['text',`Pendências: ${p.pending || 'Não informadas.'}`],['text',`Próximos encaminhamentos: ${p.next || 'Não informados.'}`],
-      ['text','Tramitação:'],...p.history.map(h => ['text',`${new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(h.enteredAt))} — ${h.unit}: ${h.note}`])
-    ]),
-    ['heading','7. Observações da gestão'],['text','[Espaço editável no Word para registrar decisões, justificativas e compromissos.]'],
-    ['text','Nota metodológica: este relatório apresenta a posição atual da carteira selecionada, sem comparação histórica de produtividade. Não há dados suficientes para calcular tempo médio de conclusão ou evolução mensal.']
+  const single = processes.length === 1 ? processes[0] : null;
+  const month = new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(now);
+  return [
+    ['title',single ? single.subject : 'Relatório Executivo — Carteira de processos'],
+    ['demandante',single?.requester || 'A preencher'],['mes',month],['consolidacao','A preencher'],
+    ['reference',single ? `Processo SEI: ${single.sei}` : `Seleção: ${scope}`],
+    ['heading','1. SÍNTESE'],['text',single ? `${single.summary || 'Descreva o objeto e o contexto do processo.'}\n\nUnidade atual: ${single.unit}. Responsável: ${single.owner}. Situação: ${single.status}.` : `A carteira analisada reúne ${processes.length} processo(s): ${active.length} ativo(s) e ${completed} concluído(s). Entre os ativos, ${late.length} estão atrasados e ${soon.length} vencem em até sete dias, incluindo hoje. Atrasados e próximos do vencimento integram o total de ativos.`],
+    ['heading','2. PROPOSTA'],['text',single ? single.next || 'Descreva as medidas propostas e os próximos encaminhamentos.' : processes.map(p=>`${p.sei} — ${p.next || 'Encaminhamento a definir.'}`).join('\n\n') || 'Nenhum processo selecionado.'],
+    ['heading','3. IMPACTO'],['text','A preencher: descreva os impactos administrativos, financeiros, orçamentários, operacionais e de pessoal, quando aplicáveis. Indique a fonte das estimativas. Não há informações cadastradas suficientes para estimar esses impactos automaticamente.'],
+    ['heading','4. OUTRAS INFORMAÇÕES'],['text',single ? `Prazo do processo: ${single.deadline.split('-').reverse().join('/')}.\nPendências: ${single.pending || 'Não informadas.'}\n\nTramitação:\n${single.history.map(h=>`${new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(h.enteredAt))} — ${h.unit}: ${h.note}`).join('\n')}` : processes.map(p=>`${p.sei} — ${p.unit}; responsável: ${p.owner}; prazo: ${p.deadline.split('-').reverse().join('/')}; pendências: ${p.pending || 'não informadas'}.`).join('\n\n') || 'Nenhuma informação complementar.'],
+    ['heading','5. ANÁLISE'],['text',`Subsídios para análise: ${late.length} processo(s) atrasado(s) e ${soon.length} próximo(s) do vencimento nesta seleção. Os prazos são os cadastrados, sem nova data de compromisso. As pendências registradas não comprovam a causa dos atrasos.\n\nObservações da gestão: a preencher. Registre avaliação técnica, riscos, conclusão e recomendação para decisão. Nenhum parecer ou fundamento legal foi inferido automaticamente.`]
   ];
-  return lines;
 }
+
 const wordEscape = text => String(text).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 export function executiveWord(lines) {
-  const body = lines.map(([kind,text]) => {
+  const metadata = ['demandante','mes','consolidacao'];
+  const paragraph = text => String(text).split('\n').map((line,i)=>`${i ? '<w:br/>' : ''}<w:t xml:space="preserve">${wordEscape(line)}</w:t>`).join('');
+  const cell = (label,value) => `<w:tc><w:tcPr><w:tcW w:w="3000" w:type="dxa"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:sz w:val="18"/></w:rPr><w:t>${label}</w:t></w:r></w:p><w:p><w:r>${paragraph(value)}</w:r></w:p></w:tc>`;
+  const header = `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(side=>`<w:${side} w:val="single" w:sz="4" w:color="B8C3CE"/>`).join('')}</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="3000"/><w:gridCol w:w="3000"/><w:gridCol w:w="3000"/></w:tblGrid><w:tr>${metadata.map((kind,i)=>cell(['DEMANDANTE','MÊS','CONSOLIDAÇÃO'][i],lines.find(l=>l[0]===kind)?.[1] || '')).join('')}</w:tr></w:tbl><w:p/>`;
+  const body = lines.filter(l=>!metadata.includes(l[0])).map(([kind,text]) => {
     const heading = ['title','heading','subheading'].includes(kind);
-    const size = kind === 'title' ? 40 : kind === 'heading' ? 28 : 22;
-    return `<w:p><w:pPr><w:spacing w:after="160"/>${heading?'<w:keepNext/>':''}</w:pPr><w:r><w:rPr>${heading?'<w:b/><w:color w:val="325E88"/>':''}<w:sz w:val="${size}"/></w:rPr><w:t xml:space="preserve">${wordEscape(text)}</w:t></w:r></w:p>`;
+    const size = kind === 'title' ? 24 : kind === 'heading' ? 24 : 22;
+    return `<w:p><w:pPr><w:spacing w:after="160"/>${heading?'<w:keepNext/>':''}</w:pPr><w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/>${heading?'<w:b/><w:color w:val="325E88"/>':''}<w:sz w:val="${size}"/></w:rPr>${paragraph(text)}</w:r></w:p>`;
   }).join('');
   return zipFiles({
     '[Content_Types].xml':'<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>',
     '_rels/.rels':'<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>',
-    'word/document.xml':`<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>`
+    'word/document.xml':`<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${header}${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>`
   }).slice(0,undefined,'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 }

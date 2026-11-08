@@ -65,7 +65,8 @@ test('relatório executivo respeita seleção, identifica prioridades e gera Wor
   assert.match(text,/2 estão atrasados e 2 vencem/);
   assert.match(text,/Observações da gestão/);
   const selected = executiveReport([demo[0]],now,'Somente uma unidade').map(l=>l[1]).join('\n');
-  assert.match(selected,/1 processo\(s\)/);
+  assert.match(selected,/Processo SEI:/);
+  assert.deepEqual(lines.filter(l=>l[0]==='heading').map(l=>l[1]),['1. SÍNTESE','2. PROPOSTA','3. IMPACTO','4. OUTRAS INFORMAÇÕES','5. ANÁLISE']);
   assert.ok(!selected.includes(demo[1].sei));
   const empty = executiveReport([],now).map(l=>l[1]).join('\n');
   assert.match(empty,/0 processo\(s\)/);

@@ -48,7 +48,7 @@ Os arquivos da interface são servidos diretamente; recarregue o navegador após
 
 ## Relatório executivo em Word
 
-No menu lateral, clique em **Relatório executivo** para visualizar a síntese da seleção atual. O relatório inclui situação da carteira, pontos de atenção, distribuição por unidade e responsável, encaminhamentos prioritários, detalhes e histórico. Use **Baixar Word (.docx)** para obter um documento editável, com espaço para observações da gestão. Os filtros da listagem são respeitados e descritos no documento. Trata-se da posição atual, sem indicadores históricos de produtividade; as pendências cadastradas não são tratadas como causas comprovadas dos atrasos.
+No menu lateral, clique em **Relatório executivo** para gerar um documento da seleção atual; para um único processo, abra seus detalhes e use **Relatório executivo**. O modelo tem cabeçalho editável (demandante, mês e consolidação), referência e cinco seções: **1. Síntese, 2. Proposta, 3. Impacto, 4. Outras informações e 5. Análise**. Revise e edite os campos na tela e use **Baixar Word (.docx)**. A edição é aplicada ao documento baixado, não ao cadastro; baixe o Word antes de fechar para guardar o texto. Impactos e conclusões técnicas não são inferidos automaticamente. O modelo não incorpora logotipos oficiais nem o conteúdo real do exemplo.
 
 ## Experimentar
 
