@@ -3,7 +3,7 @@ const root = new URL('../', import.meta.url);
 const read = path => readFile(new URL(path, root), 'utf8');
 const html = await read('public/index.html');
 const css = await read('public/style.css');
-const modules = await Promise.all(['model', 'excel', 'app'].map(name => read(`public/${name}.js`)));
+const modules = await Promise.all(['model', 'excel', 'report', 'app'].map(name => read(`public/${name}.js`)));
 const script = modules.map(source => source.replace(/^import .*?;\s*$/gm, '').replace(/^export /gm, '')).join('\n');
 const standalone = html.replace('<link rel="stylesheet" href="/style.css">', `<style>${css}</style>`)
   .replace('<script type="module" src="/app.js"></script>', () => `<script type="module">${script}</script>`)

@@ -7,7 +7,7 @@ function crc32(bytes) {
   for (const byte of bytes) { crc ^= byte; for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1)); }
   return (crc ^ -1) >>> 0;
 }
-function zip(files) {
+export function zipFiles(files) {
   const chunks = [], central = []; let offset = 0, centralSize = 0;
   for (const [name, content] of Object.entries(files)) {
     const filename = enc.encode(name), data = enc.encode(content), crc = crc32(data);
@@ -31,7 +31,7 @@ function sheet(rows) {
 export function makeWorkbook(processes) {
   const rows = [['Número SEI', 'Assunto', 'Unidade solicitante', 'Unidade atual', 'Responsável', 'Prazo', 'Situação', 'Resumo', 'Pendências', 'Próximos encaminhamentos'], ...processes.map(p => [p.sei, p.subject, p.requester, p.unit, p.owner, p.deadline, p.status, p.summary, p.pending, p.next])];
   const history = [['Número SEI', 'Unidade', 'Entrada', 'Saída', 'Observação'], ...processes.flatMap(p => p.history.map((h, i) => [p.sei, h.unit, h.enteredAt, p.history[i + 1]?.enteredAt || (p.status === 'Concluído' ? 'Concluído' : 'Unidade atual'), h.note]))];
-  return zip({
+  return zipFiles({
     '[Content_Types].xml': '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
     '_rels/.rels': '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
     'xl/workbook.xml': '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Processos" sheetId="1" r:id="rId1"/><sheet name="Tramitações" sheetId="2" r:id="rId2"/></sheets></workbook>',

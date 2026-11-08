@@ -1,3 +1,4 @@
+import {executiveReport,executiveWord} from './report.js';
 import {makeDemo,deadlineKind,daysLeft,filterProcesses,validateProcess,moveProcess,localDate} from './model.js';
 import {makeWorkbook} from './excel.js';
 const $=s=>document.querySelector(s);
@@ -46,3 +47,15 @@ $('#new-process').onclick=()=>openForm();$('#see-alerts').onclick=()=>{$('#searc
 $('#clear-filters').onclick=()=>{$('#search').value='';$('#unit-filter').value='';$('#status-filter').value='';metric='';render();};$('#search').addEventListener('input',render);$('#unit-filter').addEventListener('change',render);$('#status-filter').addEventListener('change',render);
 function exportExcel(){const list=visible();if(!list.length){toast('Não há processos para exportar com os filtros atuais.');return;}const url=URL.createObjectURL(makeWorkbook(list)),link=document.createElement('a');link.href=url;link.download=`relatorio-processos-${localDate()}.xlsx`;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);toast(`Relatório de ${list.length} processo(s) exportado com o histórico.`);}
 $('#export').onclick=exportExcel;$('#nav-export').onclick=exportExcel;$('#today').textContent=new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'long',year:'numeric'}).format(new Date());render();if(storageIssue)toast('Dados locais indisponíveis ou inválidos. Exibindo a demonstração sem sobrescrever os dados anteriores.');
+
+// Relatório gerado a partir da mesma seleção exibida na listagem.
+let currentReport = [];
+function openExecutiveReport(){
+ const list=visible();
+ const scope=[`Pesquisa: ${$('#search').value || 'sem restrição'}`,`Unidade: ${$('#unit-filter').value || 'todas'}`,`Situação: ${$('#status-filter').value || 'todas'}`,`Visão: ${view==='deadlines'?'prazos e alertas':'carteira'}`,`Indicador: ${$(`[data-metric="${metric}"] .stat-top>span`)?.textContent || 'todos'}`].join('; ');
+ currentReport=executiveReport(list,new Date(),scope);
+ $('#report-content').innerHTML=currentReport.map(([kind,text])=>{const tag=kind==='title'?'h2':kind==='heading'?'h3':kind==='subheading'?'h4':'p';return `<${tag}>${esc(text)}</${tag}>`;}).join('');
+ $('#report-dialog').showModal();
+}
+$('#executive-report').onclick=openExecutiveReport;
+$('#download-word').onclick=()=>{const url=URL.createObjectURL(executiveWord(currentReport)),a=document.createElement('a');a.href=url;a.download=`relatorio-executivo-${localDate()}.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('Relatório Word exportado. Você pode editar o texto no Word.');};

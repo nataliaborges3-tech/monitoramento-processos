@@ -56,3 +56,22 @@ test('servidor entrega página e módulos, rejeita arquivos inexistentes', async
     assert.equal((await fetch(base + '/%2e%2e%2fpackage.json')).status, 403);
   } finally { await new Promise(resolve => server.close(resolve)); }
 });
+
+test('relatório executivo respeita seleção, identifica prioridades e gera Word', async () => {
+  const {executiveReport,executiveWord} = await import('../public/report.js');
+  const lines = executiveReport(demo,now,'Todos');
+  const text = lines.map(l=>l[1]).join('\n');
+  assert.match(text,/8 processo\(s\): 6 ativo\(s\) e 2 concluído/);
+  assert.match(text,/2 estão atrasados e 2 vencem/);
+  assert.match(text,/Observações da gestão/);
+  const selected = executiveReport([demo[0]],now,'Somente uma unidade').map(l=>l[1]).join('\n');
+  assert.match(selected,/1 processo\(s\)/);
+  assert.ok(!selected.includes(demo[1].sei));
+  const empty = executiveReport([],now).map(l=>l[1]).join('\n');
+  assert.match(empty,/0 processo\(s\)/);
+  const doc = executiveWord([['title','Resumo <executivo> & dados']]);
+  assert.equal(doc.type,'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  const xml = new TextDecoder().decode(await doc.arrayBuffer());
+  assert.match(xml,/word\/document.xml/);
+  assert.match(xml,/Resumo &lt;executivo&gt; &amp; dados/);
+});

@@ -46,6 +46,10 @@ npm run dev
 
 Os arquivos da interface são servidos diretamente; recarregue o navegador após editá-los. Não há etapa de build nem necessidade de banco de dados para esta versão.
 
+## Relatório executivo em Word
+
+No menu lateral, clique em **Relatório executivo** para visualizar a síntese da seleção atual. O relatório inclui situação da carteira, pontos de atenção, distribuição por unidade e responsável, encaminhamentos prioritários, detalhes e histórico. Use **Baixar Word (.docx)** para obter um documento editável, com espaço para observações da gestão. Os filtros da listagem são respeitados e descritos no documento. Trata-se da posição atual, sem indicadores históricos de produtividade; as pendências cadastradas não são tratadas como causas comprovadas dos atrasos.
+
 ## Experimentar
 
 - **Painel:** indicadores clicáveis de processos ativos (incluindo pendentes), concluídos, atrasados e com vencimento em até sete dias. Processos concluídos não geram alertas de atraso.
@@ -76,7 +80,7 @@ A demonstração não possui autenticação, banco central, integração com SEI
 npm test
 ```
 
-Seis testes automatizados cobrem cálculo de prazos, filtros combinados, cadastro, duplicidade, tramitação, estrutura da exportação Excel e respostas HTTP.
+Sete testes automatizados cobrem cálculo de prazos, filtros combinados, cadastro, duplicidade, tramitação, estrutura da exportação Excel e respostas HTTP.
 
 Teste opcional de ponta a ponta, com o aplicativo já iniciado e Python/Playwright/Chromium disponíveis:
 
@@ -94,3 +98,5 @@ O teste usa uma sessão de navegador isolada. Exercita cadastro, edição, trami
 - `public/model.js`: regras de prazo, filtros, validação e dados fictícios.
 - `public/excel.js`: geração do arquivo XLSX/OOXML sem bibliotecas externas.
 - `test/`: testes de regras, servidor e interface.
+
+Para testar especificamente o relatório e o download Word, com o servidor ativo, execute `APP_URL=http://127.0.0.1:3000 python3 test/report-browser.py`.
