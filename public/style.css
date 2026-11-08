@@ -6,3 +6,15 @@ th{position:relative}.sr-only{left:0;top:0}button.row-action,#nav-export>span,.t
 
 /* Azul institucional inspirado na referência enviada. */
 .topbar{background:#325e88;border-bottom-color:#294f74;color:#e1ebf4}.topbar strong{color:#fff}.topbar .breadcrumb{color:#bbcee0}.topbar .demo-label{color:#fff}.topbar .demo-label i{background:#86efac}.topbar .avatar{background:#e1ebf4;color:#294f74}.brand-symbol span{color:#e1ebf4}
+/* Indicadores com cores semânticas: andamento, conclusão, atraso e atenção. */
+.stat-card[data-metric="active"]{--card-bg:#edf4fb;--card-border:#b8cfe3;--card-color:#294f74;--card-icon:#dbe8f4}
+.stat-card[data-metric="done"]{--card-bg:#effbf2;--card-border:#a7dcb5;--card-color:#166534;--card-icon:#d1f5db}
+.stat-card[data-metric="overdue"]{--card-bg:#fff1f2;--card-border:#f5b4bb;--card-color:#991b1b;--card-icon:#ffdce0}
+.stat-card[data-metric="soon"]{--card-bg:#fffbeb;--card-border:#ebcf77;--card-color:#854d0e;--card-icon:#fef0b5}
+.stat-card[data-metric]{background:var(--card-bg);border-color:var(--card-border);border-top:3px solid var(--card-color)}
+.stat-card[data-metric] .stat-top,.stat-card[data-metric]>strong,.stat-card[data-metric] .stat-hint{color:var(--card-color)}
+.stat-card[data-metric] .stat-icon{background:var(--card-icon);color:var(--card-color)}
+.stat-card[data-metric] .dot{background:var(--card-color)}
+.stat-card[data-metric]:hover,.stat-card[data-metric].selected{border-color:var(--card-color);box-shadow:0 0 0 2px var(--card-border)}
+.deadline-date.soon,.deadline-hint.soon{color:#854d0e}
+.amber{background:#fef3c7;color:#854d0e}.dot.amber{background:#b77910}
